@@ -21,4 +21,13 @@ router.get("/", (req, res) => {
   res.json(hives.filter((hive) => hive.site_id === site_id));
 });
 
+// GET /api/hives/:id — une ruche, ou 404
+router.get("/:id", (req, res) => {
+  const hive = hives.find((h) => h.id === req.params.id);
+  if (!hive) {
+    return res.status(404).json({ error: `Aucune ruche ne porte l'identifiant ${req.params.id}.` });
+  }
+  res.json(hive);
+});
+
 export default router;
