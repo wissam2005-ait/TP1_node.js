@@ -33,3 +33,18 @@ Non, elle est même un peu plus lente (216 ms contre 213 ms), car elle découpe 
 
 **3. Pourquoi l'effet est-il presque invisible avec le fichier d'une journée ?**
 Le fichier d'une journée est 30 fois plus petit (4 800 lignes, 1,2 Mo) : l'import bloquant ne dure que quelques millisecondes. Une requête /ping arrivée pendant ce temps attend donc au pire quelques millisecondes, ce qui ne se voit pas. Le blocage ne devient gênant que lorsque la quantité de données grandit.
+## Jour 1 — API v0
+
+- Ruches, mesures et inspections en mémoire, organisées en couches : routeur → contrôleur → service → repository.
+- Contrat de chaque route : `docs/api.md`.
+- Collection de requêtes : `collections/queenbee.postman_collection.json`.
+- Erreurs au format RFC 9457 (`application/problem+json`).
+- Contrôle des plages physiques des mesures (UC-CY02) : une mesure hors plage est refusée (400).
+- Test : `npm test` (refus d'un poids de 500 kg, enregistrement d'une mesure valide).
+
+### Lancer le projet
+
+    cp .env.example .env     # puis remplir les valeurs
+    npm install
+    npm run dev              # http://localhost:3000
+    npm test

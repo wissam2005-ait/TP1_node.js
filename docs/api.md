@@ -204,14 +204,27 @@ Enregistre une mesure envoyée par la passerelle d'un site (format du § 6.5 du 
 }
 ```
 
-**400** : `timestamp` ou `weight_kg` manque, ou le `hive_id` du corps n'est pas celui du chemin.
+Chaque valeur numérique présente doit être un nombre dans sa plage physique (UC-CY02) :
+
+| Champ | Minimum | Maximum |
+| --- | --- | --- |
+| `position_lat` | -90 | 90 |
+| `position_lon` | -180 | 180 |
+| `weight_kg` | 0 | 150 |
+| `temp_internal_c` | -10 | 60 |
+| `temp_external_c` | -20 | 60 |
+| `humidity_pct` | 0 | 100 |
+| `acoustic_activity_score` | 0 | 1 |
+| `battery_pct` | 0 | 100 |
+
+**400** : `timestamp` ou `weight_kg` manque, le `hive_id` du corps n'est pas celui du chemin, ou une valeur est hors de sa plage physique. Dans ce cas, rien n'est enregistré.
 
 ```json
 {
   "type": "about:blank",
   "title": "Requête invalide",
   "status": 400,
-  "detail": "Les champs timestamp et weight_kg sont obligatoires."
+  "detail": "Le champ weight_kg doit être un nombre compris entre 0 et 150 (reçu : 500)."
 }
 ```
 

@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/hives/XX-NOPE-999/inspections"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "id": "{{$guid}}",
+      "inspected_at": "2026-10-31T10:00:00Z",
+      "colony_status": "forte"
+    }
+order: 9000

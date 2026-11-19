@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/api/hives/XX-NOPE-999/measures"
+method: GET
+order: 9000

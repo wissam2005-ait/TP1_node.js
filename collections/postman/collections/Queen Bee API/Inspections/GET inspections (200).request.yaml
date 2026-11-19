@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/api/hives/SN-CASA-001/inspections"
+method: GET
+order: 1000

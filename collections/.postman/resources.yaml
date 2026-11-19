@@ -1,0 +1,14 @@
+# Use this workspace to collaborate
+workspace:
+  id: 373e880c-075d-45f5-8e90-9d6795f69c66
+
+localResources:
+  collections:
+    - ../queenbee.postman_collection.json
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../postman/collections/Queen Bee API: 948aa020-92ed-493e-9520-84964754a6f0
+    ../postman/collections/Queen Bee API Copy: 25c75c1a-1b7f-4f22-8402-befe6ebf9fd4

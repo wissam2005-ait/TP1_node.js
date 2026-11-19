@@ -1,0 +1,7 @@
+$kind: http-request
+name: GET /api/hives?site_id=SN-CASA (200)
+url: "{{baseUrl}}/api/hives?site_id=SN-CASA"
+method: GET
+queryParams:
+  site_id: SN-CASA
+order: 2000

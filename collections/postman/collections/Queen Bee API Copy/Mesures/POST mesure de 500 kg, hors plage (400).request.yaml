@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/api/hives/SN-CASA-001/measures"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "timestamp": "2026-10-31T10:00:00Z",
+      "weight_kg": 500
+    }
+order: 13000

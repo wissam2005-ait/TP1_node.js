@@ -1,0 +1,5 @@
+$kind: http-request
+name: GET /api/hives/XX-NOPE-999 (404)
+url: "{{baseUrl}}/api/hives/XX-NOPE-999"
+method: GET
+order: 5000

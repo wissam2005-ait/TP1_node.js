@@ -1,0 +1,5 @@
+$kind: http-request
+name: GET mesures ?offset=50 (200)
+url: "{{baseUrl}}/api/hives/SN-CASA-001/measures?offset=50"
+method: GET
+order: 4000

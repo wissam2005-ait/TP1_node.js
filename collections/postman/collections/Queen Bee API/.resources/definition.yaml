@@ -1,0 +1,4 @@
+$kind: collection
+description: Une requête par route, cas d'erreur compris. Le code attendu est entre parenthèses. Aucun jeton ni mot de passe.
+variables:
+  baseUrl: http://localhost:3000

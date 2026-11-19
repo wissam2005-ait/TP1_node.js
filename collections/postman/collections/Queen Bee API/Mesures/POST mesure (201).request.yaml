@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/hives/SN-CASA-001/measures"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "hive_id": "SN-CASA-001",
+      "site_id": "SN-CASA",
+      "timestamp": "2026-10-31T10:00:00Z",
+      "position_lat": 12.5743,
+      "position_lon": -16.2873,
+      "weight_kg": 36.84,
+      "temp_internal_c": 34.4,
+      "temp_external_c": 27.1,
+      "humidity_pct": 64,
+      "acoustic_activity_score": 0.42,
+      "battery_pct": 88
+    }
+order: 10000

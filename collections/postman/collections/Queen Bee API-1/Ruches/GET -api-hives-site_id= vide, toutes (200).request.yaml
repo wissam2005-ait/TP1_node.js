@@ -1,0 +1,5 @@
+$kind: http-request
+name: GET /api/hives?site_id= vide, toutes (200)
+url: "{{baseUrl}}/api/hives?site_id="
+method: GET
+order: 3000
