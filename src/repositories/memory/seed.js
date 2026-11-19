@@ -1,10 +1,10 @@
-// Données en mémoire : quelques ruches de deux sites, copiées du jeu de données.
-// Pas encore de base de données : tout ce qui est ajouté est perdu au redémarrage.
+// Données de départ des repositories en mémoire : quelques ruches de deux sites,
+// les mesures d'une journée (96 par ruche SN-CASA) et deux inspections.
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-export const hives = [
+export const seedHives = [
   { id: "SN-CASA-001", site_id: "SN-CASA", status: "active" },
   { id: "SN-CASA-002", site_id: "SN-CASA", status: "active" },
   { id: "SN-CASA-003", site_id: "SN-CASA", status: "active" },
@@ -12,20 +12,19 @@ export const hives = [
   { id: "SN-SEDH-002", site_id: "SN-SEDH", status: "active" },
 ];
 
-// Mesures : chargées au démarrage depuis le fichier d'une journée (96 mesures par ruche
-// SN-CASA, une toutes les 15 minutes), pour avoir de quoi paginer.
 // readFileSync est acceptable ici : on est au démarrage, aucune requête n'attend.
-const FICHIER = join(import.meta.dirname, "..", "..", "data", "mesures-SN-CASA-2026-10-31.ndjson");
-const ids = new Set(hives.map((h) => h.id));
+const FICHIER = join(import.meta.dirname, "..", "..", "..", "data", "mesures-SN-CASA-2026-10-31.ndjson");
+const ids = new Set(seedHives.map((h) => h.id));
 
-export const measures = readFileSync(FICHIER, "utf8")
-  .split("\n")
-  .filter((ligne) => ligne.trim() !== "")
-  .map((ligne) => JSON.parse(ligne))
-  .filter((m) => ids.has(m.hive_id));
+export function loadSeedMeasures() {
+  return readFileSync(FICHIER, "utf8")
+    .split("\n")
+    .filter((ligne) => ligne.trim() !== "")
+    .map((ligne) => JSON.parse(ligne))
+    .filter((m) => ids.has(m.hive_id));
+}
 
-// Inspections saisies sur le terrain. L'identifiant est un UUID choisi par l'application mobile.
-export const inspections = [
+export const seedInspections = [
   {
     id: "0b6c4a0e-6f1f-4d8e-9a3b-1c2d3e4f5a6b",
     hive_id: "SN-CASA-001",

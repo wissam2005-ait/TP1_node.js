@@ -1,30 +1,43 @@
-// Crée l'application Express et branche les intergiciels et les routes.
-// L'ordre de déclaration est l'ordre d'exécution.
+// app.js : le SEUL endroit où tout se branche.
+// createApp reçoit les repositories, crée les services, le contrôleur et le routeur,
+// puis renvoie l'application. Il ne démarre pas le serveur : c'est le rôle de server.js.
+// (Les tests peuvent donc créer une application sans ouvrir de port.)
 
 import express from "express";
-import { requestLogger } from "./middlewares/requestLogger.js"; // en ESM, l'extension .js est obligatoire
+import { requestLogger } from "./middlewares/requestLogger.js";
 import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.js";
-import hivesRouter from "./routes/hives.router.js";
-// import morgan from "morgan";
+import { createHivesService } from "./services/hives.service.js";
+import { createMeasuresService } from "./services/measures.service.js";
+import { createInspectionsService } from "./services/inspections.service.js";
+import { createHivesController } from "./controllers/hives.controller.js";
+import { createHivesRouter } from "./routes/hives/hives.router.js";
 
-const app = express();
+export function createApp({ hivesRepository, measuresRepository, inspectionsRepository }) {
+  // Services : chacun reçoit ses dépendances.
+  const hivesService = createHivesService({ hivesRepository });
+  const measuresService = createMeasuresService({ hivesService, measuresRepository });
+  const inspectionsService = createInspectionsService({ hivesService, inspectionsRepository });
 
-// 1. Journal : un seul des deux, sinon chaque requête apparaît deux fois.
-app.use(requestLogger);
-// app.use(morgan("dev")); // pour comparer : commentez requestLogger et décommentez cette ligne
+  // Contrôleur : il ne connaît que les services.
+  const controller = createHivesController({ hivesService, measuresService, inspectionsService });
 
-// 2. Lecture des corps JSON : AVANT les routes, sinon req.body vaut undefined.
-app.use(express.json());
+  const app = express();
 
-// 3. Routes
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
+  // 1. Journal : une ligne par requête.
+  app.use(requestLogger);
 
-app.use("/api/hives", hivesRouter);
+  // 2. Lecture des corps JSON : AVANT les routes, sinon req.body vaut undefined.
+  app.use(express.json());
 
-// 4. Erreurs : TOUJOURS en dernier, après toutes les routes.
-app.use(notFoundHandler); // aucune route n'a répondu : 404
-app.use(errorHandler); // une erreur a été levée (JSON mal formé, bug…) : 400 ou 500
+  // 3. Routes
+  app.get("/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+  app.use("/api/hives", createHivesRouter(controller));
 
-export default app;
+  // 4. Erreurs : TOUJOURS en dernier, après toutes les routes.
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+}
