@@ -68,3 +68,20 @@ Car `pool.query()` peut piocher une connexion différente à chaque appel dans l
 
 **4. Que se passerait-il si `client.release()` n'était pas dans le `finally`, et qu'une erreur survenait dix fois de suite ?**
 Le client ne serait jamais rendu au pool. Au bout de 10 erreurs, le pool (limité à `DB_POOL_MAX=10`) serait saturé. L'API ne pourrait plus obtenir de connexion et toutes les requêtes suivantes échoueraient par timeout.
+
+## TP 6 — Validation et erreurs
+
+Ce TP centralise la validation des entrées avec **Joi** et la gestion des erreurs via un intergiciel unique (`errorHandler`).
+
+### Ce qui a été mis en place :
+*   **Erreurs typées** : Utilisation de `ValidationError`, `NotFoundError` et `ConflictError` héritant de `AppError`.
+*   **Validation Joi** : Les schémas `measureSchema`, `inspectionSchema`, `paginationSchema` et `hivesQuerySchema` vérifient les types, les plages physiques et les champs autorisés (rejet des champs inconnus comme `author_id`).
+*   **Intergiciel `validate`** : Placé avant les contrôleurs, il valide `req.body` ou `req.query`, et place les données converties dans `req.validated`.
+*   **Gestion centralisée des erreurs** : Le `errorHandler` traduit les erreurs métier et les codes PostgreSQL (ex: `23505` pour les doublons) en réponses HTTP propres (400, 409, etc.) au format RFC 9457, sans exposer de piles d'exécution.
+*   **Nettoyage des contrôleurs** : Suppression des `try/catch` et des vérifications manuelles (comme `parseInteger`), Express 5 gère les erreurs asynchrones.
+
+### Vérifications effectuées :
+*   Une mesure invalide (`weight_kg: 500`, `humidity_pct: 120`) renvoie une **400** avec les deux messages d'erreur en français.
+*   Un corps vide renvoie **400** avec l'indication des champs obligatoires.
+*   Un paramètre `limit=abc` renvoie **400**.
+*   Un champ non autorisé (`author_id`) dans une inspection renvoie **400**.
