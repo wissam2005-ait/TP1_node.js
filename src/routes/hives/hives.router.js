@@ -8,8 +8,11 @@ import {
   inspectionSchema 
 } from "../../validators/schemas.js";
 
-export function createHivesRouter(controller) {
+export function createHivesRouter({ controller, requireAuth }) { // <-- On récupère requireAuth
   const router = express.Router();
+
+  // On applique requireAuth à toutes les routes de ce routeur
+  router.use(requireAuth); 
 
   router.get("/", validate(hivesQuerySchema, "query"), controller.listHives);
   router.get("/:id", controller.getHive);

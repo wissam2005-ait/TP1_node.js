@@ -85,3 +85,9 @@ Ce TP centralise la validation des entrées avec **Joi** et la gestion des erreu
 *   Un corps vide renvoie **400** avec l'indication des champs obligatoires.
 *   Un paramètre `limit=abc` renvoie **400**.
 *   Un champ non autorisé (`author_id`) dans une inspection renvoie **400**.
+## TP 7 — Authentification et autorisation
+
+- Mise en place de l'authentification JWT (access + refresh tokens).
+- Hachage des mots de passe avec bcrypt.
+- Contrôle d'accès basé sur les rôles (admin, gestionnaire, coordinateur, apiculteur).
+- Blocage automatique du compte après 5 échecs de connexion.

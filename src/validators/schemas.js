@@ -31,3 +31,26 @@ export const inspectionSchema = Joi.object({
   queen_present: Joi.boolean().allow(null),
   observations: Joi.string().max(2000).allow("", null),
 });
+// --- AJOUT TP 7 ---
+const email = Joi.string().email({ tlds: { allow: false } }).max(254);
+
+export const registerSchema = Joi.object({
+  email: email.required(),
+  password: Joi.string().min(12).max(72).required(),
+  role: Joi.string().valid("apiculteur", "coordinateur", "gestionnaire", "admin").required(),
+  site_id: Joi.when("role", {
+    is: Joi.valid("apiculteur", "coordinateur"),
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden(),
+  }),
+});
+
+export const loginSchema = Joi.object({
+  email: email.required(),
+  password: Joi.string().required(),
+});
+
+export const refreshSchema = Joi.object({
+  refresh_token: Joi.string().required(),
+});
+// ------------------
