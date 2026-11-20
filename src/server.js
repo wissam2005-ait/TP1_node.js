@@ -1,21 +1,24 @@
-// server.js : crée les repositories, appelle createApp, puis démarre le serveur.
-// Demain (jour 2), on remplacera les repositories en mémoire par ceux de PostgreSQL :
-// ce sera le seul fichier à changer pour brancher la base.
+// server.js : crée les repositories PostgreSQL et démarre le serveur.
 // Lancement : npm run dev (= node --watch --env-file=.env src/server.js)
 
 import { config } from "./config.js";
 import { createApp } from "./app.js";
-import { createMemoryHivesRepository } from "./repositories/memory/hives.repository.js";
-import { createMemoryMeasuresRepository } from "./repositories/memory/measures.repository.js";
-import { createMemoryInspectionsRepository } from "./repositories/memory/inspections.repository.js";
-import { seedHives, loadSeedMeasures, seedInspections } from "./repositories/memory/seed.js";
+import { createPostgresRepositories } from "./repositories/postgres/index.js";
+import { createPool } from "./db.js";
 
-const app = createApp({
-  hivesRepository: createMemoryHivesRepository(seedHives),
-  measuresRepository: createMemoryMeasuresRepository(loadSeedMeasures()),
-  inspectionsRepository: createMemoryInspectionsRepository(seedInspections),
-});
+const pool = createPool();
+
+try {
+  // Vérifie la connexion dès le démarrage
+  await pool.query("SELECT 1"); 
+} catch (err) {
+  console.error(`Impossible de joindre PostgreSQL sur ${config.db.host}:${config.db.port} : ${err.message || err.code}`);
+  process.exit(1);
+}
+
+const repositories = createPostgresRepositories(pool);
+const app = createApp(repositories);
 
 app.listen(config.port, () => {
-  console.log(`API Queen Bee sur http://localhost:${config.port} (${config.env})`);
+  console.log(`API Queen Bee sur http://localhost:${config.port} (stockage : postgres)`);
 });

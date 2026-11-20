@@ -1,0 +1,34 @@
+{
+  "inspections": [
+    {
+      "id": "6f1d2c3a-1b2c-4d5e-8f60-0a1b2c3d4e01",
+      "hive_id": "SN-CASA-001",
+      "inspected_at": "2026-11-02T08:15:00Z",
+      "colony_status": "forte",
+      "queen_present": true,
+      "observations": "Cadres de couvain bien remplis"
+    },
+    {
+      "id": "6f1d2c3a-1b2c-4d5e-8f60-0a1b2c3d4e02",
+      "hive_id": "SN-CASA-002",
+      "inspected_at": "2026-11-02T08:40:00Z",
+      "colony_status": "normale",
+      "queen_present": true,
+      "observations": null
+    },
+    {
+      "id": "6f1d2c3a-1b2c-4d5e-8f60-0a1b2c3d4e03",
+      "hive_id": "SN-CASA-003",
+      "inspected_at": "2026-11-02T09:05:00Z",
+      "colony_status": "faible",
+      "queen_present": false,
+      "observations": "Reine introuvable, à revoir dans une semaine"
+    },
+    {
+      "id": "6f1d2c3a-1b2c-4d5e-8f60-0a1b2c3d4e04",
+      "hive_id": "SN-CASA-011",
+      "inspected_at": "2026-11-02T09:30:00Z",
+      "colony_status": "normale"
+    }
+  ]
+}
