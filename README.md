@@ -48,3 +48,23 @@ Le fichier d'une journée est 30 fois plus petit (4 800 lignes, 1,2 Mo) : l'impo
     npm install
     npm run dev              # http://localhost:3000
     npm test
+
+## TP 5 — Brancher PostgreSQL
+
+L'API lit et écrit désormais dans la base de données PostgreSQL via le pool de connexions `pg`.
+
+### Import en masse : réponses aux questions
+
+**1. Quel temps obtenez-vous dans chaque mode ? D'où vient l'écart ?**
+*   **Mode ligne** : ~X secondes (ex: 12s). Chaque insertion est une transaction individuelle, ce qui génère un aller-retour réseau et un commit disque pour chaque mesure.
+*   **Mode lot** : ~Y secondes (ex: 1.5s). Les 1 000 lignes sont envoyées en une seule requête et une seule transaction. L'écart vient de la réduction drastique des allers-retours réseau et de l'écriture groupée sur le disque.
+
+**2. Si la 2 001e mesure provoquait une erreur, que resterait-il en base dans chaque mode ?**
+*   **Mode ligne** : Les 2 000 premières mesures restent en base, car chaque `INSERT` a été validé (commit) individuellement.
+*   **Mode lot** : Rien ne reste. La transaction englobe tout le lot ; en cas d'erreur, un `ROLLBACK` annule l'intégralité des 2 000 insertions précédentes.
+
+**3. Pourquoi la transaction emprunte-t-elle une connexion avec `pool.connect()` au lieu d'appeler `pool.query()` ?**
+Car `pool.query()` peut piocher une connexion différente à chaque appel dans le pool. Pour garantir qu'un `BEGIN`, les `INSERT` et le `COMMIT` s'exécutent sur la même session (la même connexion), il faut la réserver manuellement avec `pool.connect()`.
+
+**4. Que se passerait-il si `client.release()` n'était pas dans le `finally`, et qu'une erreur survenait dix fois de suite ?**
+Le client ne serait jamais rendu au pool. Au bout de 10 erreurs, le pool (limité à `DB_POOL_MAX=10`) serait saturé. L'API ne pourrait plus obtenir de connexion et toutes les requêtes suivantes échoueraient par timeout.
