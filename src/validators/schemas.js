@@ -53,4 +53,21 @@ export const loginSchema = Joi.object({
 export const refreshSchema = Joi.object({
   refresh_token: Joi.string().required(),
 });
+
+// --- AJOUT TP 8 : Schéma pour la synchronisation par lot ---
+export const syncSchema = Joi.object({
+  inspections: Joi.array()
+    .items(Joi.object({
+      id: Joi.string().guid().required(),
+      hive_id: Joi.string().required(),
+      inspected_at: Joi.date().iso().max("now").required(),
+      colony_status: Joi.string().valid("forte", "normale", "faible", "morte").required(),
+      queen_present: Joi.boolean().allow(null),
+      observations: Joi.string().max(2000).allow("", null),
+      version: Joi.number().integer().min(1), // Optionnel : présent si c'est une modification
+    }))
+    .min(1)
+    .max(500)
+    .required(),
+});
 // ------------------

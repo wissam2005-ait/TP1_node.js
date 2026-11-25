@@ -29,10 +29,11 @@ export function createHivesController({ hivesService, measuresService, inspectio
     },
 
     // POST /api/hives/:id/measures
-    async addMeasure(req, res) {
-      // req.validated contient le corps (body) validé et converti
-      const measure = await measuresService.addMeasure(req.params.id, req.validated);
-      res.status(201).json(measure);
+        async addMeasure(req, res) {
+      // Le service renvoie { measure, created }
+      const result = await measuresService.addMeasure(req.params.id, req.validated);
+      // 201 si c'est une création, 200 si c'était un doublon (rejeu)
+      res.status(result.created ? 201 : 200).json(result.measure);
     },
 
     // GET /api/hives/:id/inspections
@@ -42,10 +43,11 @@ export function createHivesController({ hivesService, measuresService, inspectio
     },
 
     // POST /api/hives/:id/inspections
-    async addInspection(req, res) {
-      // req.validated contient le corps (body) validé
-      const inspection = await inspectionsService.addInspection(req.params.id, req.validated);
-      res.status(201).json(inspection);
+        async addInspection(req, res) {
+      // Le service renvoie { inspection, created }
+      const result = await inspectionsService.addInspection(req.params.id, req.validated);
+      // 201 si créé, 200 si déjà existant
+      res.status(result.created ? 201 : 200).json(result.inspection);
     },
   };
 }

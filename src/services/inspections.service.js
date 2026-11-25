@@ -1,70 +1,103 @@
 // Service des inspections : les règles métier sur les inspections.
+import { ValidationError, ConflictError, AppError } from "../errors.js";
 
-import { ValidationError, ConflictError } from "../errors.js";
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-// Date ISO 8601 : 2026-10-31, 2026-10-31T10:00:00Z, 2026-10-31T10:00:00.000+01:00…
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
-export const COLONY_STATUSES = ["forte", "normale", "faible", "morte"];
+// L'application mobile envoie son propre UUID. On construit l'objet propre ici.
+function toInspection(user, hive, data) {
+  return {
+    id: data.id,
+    hive_id: hive.id,
+    author_id: user.id, // L'auteur vient du jeton JWT (req.user)
+    inspected_at: data.inspected_at,
+    colony_status: data.colony_status,
+    queen_present: data.queen_present ?? null,
+    observations: data.observations ?? null,
+  };
+}
 
 export function createInspectionsService({ hivesService, inspectionsRepository }) {
   return {
-    async listInspections(hiveId) {
-      const hive = await hivesService.getHive(hiveId);
+    async listInspections(user, hiveId) {
+      const hive = await hivesService.getHive(user, hiveId);
       const items = await inspectionsRepository.findByHive(hive.id);
       return { items };
     },
 
-    async addInspection(hiveId, data) {
-      const hive = await hivesService.getHive(hiveId);
-      const { id, inspected_at, colony_status, queen_present, observations } = data;
+    async addInspection(user, hiveId, data) {
+      const hive = await hivesService.getHive(user, hiveId);
 
-      // id : UUID choisi par l'application mobile, obligatoire
-      if (typeof id !== "string" || !UUID_REGEX.test(id)) {
-        throw new ValidationError("Le champ id est obligatoire et doit être un UUID.");
+      if (data.hive_id !== undefined && data.hive_id !== hive.id) {
+        throw new ValidationError(`Le hive_id du corps (${data.hive_id}) ne correspond pas à la ruche ${hive.id}.`);
       }
 
-      // inspected_at : date ISO 8601, obligatoire
-      if (
-        typeof inspected_at !== "string" ||
-        !ISO_DATE_REGEX.test(inspected_at) ||
-        Number.isNaN(Date.parse(inspected_at))
-      ) {
-        throw new ValidationError(
-          "Le champ inspected_at est obligatoire et doit être une date ISO 8601, par exemple 2026-10-31T10:00:00Z."
-        );
+      const result = await inspectionsRepository.insertIfAbsent(toInspection(user, hive, data));
+
+      if (!result.created && result.inspection.hive_id !== hive.id) {
+        throw new ConflictError(`L'identifiant ${data.id} est déjà utilisé par une inspection d'une autre ruche.`);
       }
 
-      // colony_status : une valeur de la liste, obligatoire
-      if (!COLONY_STATUSES.includes(colony_status)) {
-        throw new ValidationError(
-          `Le champ colony_status est obligatoire et doit valoir ${COLONY_STATUSES.join(", ")}.`
-        );
+      return result; // { inspection, created }
+    },
+
+    // --- LOGIQUE DE SYNCHRONISATION (TP 8) ---
+    async syncInspections(user, items) {
+      const results = [];
+      
+      for (const item of items) {
+        try {
+          // 1. On vérifie que la ruche existe et qu'on y a accès (lève 404 ou 403)
+          const hive = await hivesService.getHive(user, item.hive_id);
+          const inspection = toInspection(user, hive, item);
+
+          // 2. Si c'est une nouvelle inspection (pas de version fournie)
+          if (item.version === undefined) {
+            const { inspection: stored, created } = await inspectionsRepository.insertIfAbsent(inspection);
+            
+            if (created) {
+              results.push({ id: item.id, status: "created", version: stored.version });
+            } else if (stored.hive_id !== hive.id) {
+              results.push({ id: item.id, status: "rejected", detail: "Cet identifiant est déjà utilisé par une inspection d'une autre ruche." });
+            } else {
+              results.push({ id: item.id, status: "unchanged", version: stored.version });
+            }
+            continue;
+          }
+
+          // 3. Si c'est une modification (version fournie), on tente de mettre à jour
+          const updated = await inspectionsRepository.updateIfVersion(inspection, item.version);
+          
+          if (updated) {
+            results.push({ id: item.id, status: "updated", version: updated.version });
+          } else {
+            // Si updateIfVersion échoue, c'est soit un conflit de version, soit l'ID n'existe pas
+            const current = await inspectionsRepository.findById(item.id);
+            if (!current || current.hive_id !== hive.id) {
+              results.push({ id: item.id, status: "rejected", detail: "Inspection inconnue pour cette ruche : envoyez-la sans version pour la créer." });
+            } else {
+              results.push({
+                id: item.id,
+                status: "conflict",
+                detail: `L'inspection a été modifiée entre-temps : version ${current.version} sur le serveur, ${item.version} sur l'appareil.`,
+                current,
+              });
+            }
+          }
+        } catch (err) {
+          // Si on a une erreur métier (404, 403...), on la met dans "rejected" sans arrêter le lot
+          if (err instanceof AppError) {
+            results.push({ id: item.id, status: "rejected", detail: err.message });
+          } else {
+            throw err; // Erreur technique (bug), on laisse remonter
+          }
+        }
       }
 
-      // queen_present : booléen, facultatif
-      if (queen_present !== undefined && typeof queen_present !== "boolean") {
-        throw new ValidationError("Le champ queen_present doit être un booléen (true ou false).");
+      // On calcule le résumé
+      const summary = { created: 0, unchanged: 0, updated: 0, conflict: 0, rejected: 0 };
+      for (const result of results) {
+        summary[result.status] += 1;
       }
 
-      // observations : texte, facultatif
-      if (observations !== undefined && observations !== null && typeof observations !== "string") {
-        throw new ValidationError("Le champ observations doit être un texte.");
-      }
-
-      // Un même UUID ne peut pas désigner deux inspections.
-      if (await inspectionsRepository.findById(id)) {
-        throw new ConflictError(`Une inspection porte déjà l'identifiant ${id}.`);
-      }
-
-      return inspectionsRepository.add({
-        id,
-        hive_id: hive.id,
-        inspected_at,
-        colony_status,
-        queen_present: queen_present ?? null,
-        observations: observations ?? null,
-      });
+      return { summary, results };
     },
   };
 }

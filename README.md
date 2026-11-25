@@ -91,3 +91,10 @@ Ce TP centralise la validation des entrées avec **Joi** et la gestion des erreu
 - Hachage des mots de passe avec bcrypt.
 - Contrôle d'accès basé sur les rôles (admin, gestionnaire, coordinateur, apiculteur).
 - Blocage automatique du compte après 5 échecs de connexion.
+
+## TP 8 — Synchronisation idempotente
+
+- Mise en place de la route `POST /api/inspections/sync` pour recevoir des lots d'inspections.
+- Utilisation de `ON CONFLICT DO NOTHING` pour éviter les doublons lors du rejeu.
+- Gestion des versions (verrouillage optimiste) pour détecter les conflits de modification.
+- Règle de conflit choisie : le serveur l'emporte. Si l'appareil envoie une version périmée, le serveur renvoie un statut `conflict` avec la version actuelle.

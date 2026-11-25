@@ -11,6 +11,9 @@ import { createHivesService } from "./services/hives.service.js";
 import { createMeasuresService } from "./services/measures.service.js";
 import { createInspectionsService } from "./services/inspections.service.js";
 
+import { createInspectionsController } from "./controllers/inspections.controller.js";
+import { createInspectionsRouter } from "./routes/inspections/inspections.router.js";
+
 export function createApp({ 
   hivesRepository, 
   measuresRepository, 
@@ -40,7 +43,13 @@ export function createApp({
     requireAuth 
   }));
 
-  // N'oublie pas d'appeler tes gestionnaires d'erreurs à la fin (notFoundHandler et errorHandler)
+  // --- AJOUT TP 8 : Route de synchronisation ---
+  app.use("/api/inspections", createInspectionsRouter({ 
+    controller: createInspectionsController({ inspectionsService }), 
+    requireAuth 
+  }));
+
+  // Gestionnaires d'erreurs (à décommenter si tu les as)
   // app.use(notFoundHandler);
   // app.use(errorHandler);
 
